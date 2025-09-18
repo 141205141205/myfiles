@@ -7,7 +7,7 @@ sleep 2
 echo "CH b0c0"
 read ch_b
 echo "CH 8000"
-read ch_b
+read ch_b1
 
 b="80:03:84:a7:b0:c0"
 
